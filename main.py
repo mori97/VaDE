@@ -3,6 +3,7 @@ import argparse
 from munkres import Munkres
 import torch
 import torch.utils.data
+from torch.utils.tensorboard import SummaryWriter
 from torchvision import datasets, transforms
 
 from vade import VaDE, lossfun
@@ -10,7 +11,7 @@ from vade import VaDE, lossfun
 N_CLASSES = 10
 
 
-def train(model, data_loader, optimizer, device, epoch):
+def train(model, data_loader, optimizer, device, epoch, writer):
     model.train()
 
     total_loss = 0
@@ -24,11 +25,10 @@ def train(model, data_loader, optimizer, device, epoch):
         loss.backward()
         optimizer.step()
 
-    print('Epoch {:>3}: ELBO = {:.4f}'.format(
-        epoch, -total_loss / len(data_loader)))
+    writer.add_scalar('Loss/train', total_loss / len(data_loader), epoch)
 
 
-def test(model, data_loader, device, epoch):
+def test(model, data_loader, device, epoch, writer):
     model.eval()
 
     gain = torch.zeros((N_CLASSES, N_CLASSES), dtype=torch.int, device=device)
@@ -42,7 +42,8 @@ def test(model, data_loader, device, epoch):
         assign = Munkres().compute(cost)
         acc = torch.sum(gain[tuple(zip(*assign))]).float() / torch.sum(gain)
 
-    print('Epoch {:>3}: ACC = {:.2%}'.format(epoch, acc))
+    writer.add_scalar('Acc/test', acc, epoch)
+    writer.flush()
 
 
 def main():
@@ -84,10 +85,15 @@ def main():
     lr_scheduler = torch.optim.lr_scheduler.StepLR(
         optimizer, step_size=10, gamma=0.9)
 
+    # TensorBoard
+    writer = SummaryWriter()
+
     for epoch in range(1, args.epochs + 1):
-        train(model, train_loader, optimizer, device, epoch)
-        test(model, test_loader, device, epoch)
+        train(model, train_loader, optimizer, device, epoch, writer)
+        test(model, test_loader, device, epoch, writer)
         lr_scheduler.step()
+
+    writer.close()
 
 
 if __name__ == '__main__':
