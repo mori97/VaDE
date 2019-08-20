@@ -67,7 +67,7 @@ def main():
                         type=str, default=None)
     args = parser.parse_args()
 
-    if_use_cuda = torch.cuda.is_available() and args.device
+    if_use_cuda = torch.cuda.is_available() and args.gpu >= 0
     device = torch.device('cuda:{}'.format(args.gpu) if if_use_cuda else 'cpu')
 
     train_dataset = datasets.MNIST('./data', train=True, download=True,
