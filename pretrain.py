@@ -16,9 +16,10 @@ def train(model, data_loader, optimizer, device, epoch):
 
     total_loss = 0
     for x, _ in data_loader:
+        batch_size = x.size(0)
         x = x.to(device).view(-1, 784)
         recon_x = model(x)
-        loss = F.mse_loss(recon_x, x)
+        loss = F.binary_cross_entropy(recon_x, x, reduction='sum') / batch_size
         total_loss += loss.item()
 
         optimizer.zero_grad()
