@@ -111,3 +111,46 @@ def lossfun(model, x, recon_x, mu, logvar):
         - 0.5 * torch.sum(1 + logvar)
     loss = loss / batch_size
     return loss
+
+
+class AutoEncoderForPretrain(torch.nn.Module):
+    """Auto-Encoder for pretraining VaDE.
+
+    Args:
+        data_dim (int): Dimension of observed data.
+        latent_dim (int): Dimension of latent space.
+    """
+    def __init__(self, data_dim, latent_dim):
+        super(AutoEncoderForPretrain, self).__init__()
+
+        self.encoder = torch.nn.Sequential(
+            torch.nn.Linear(data_dim, 500),
+            torch.nn.ReLU(),
+            torch.nn.Linear(500, 500),
+            torch.nn.ReLU(),
+            torch.nn.Linear(500, 2000),
+            torch.nn.ReLU(),
+        )
+        self.encoder_mu = torch.nn.Linear(2000, latent_dim)
+
+        self.decoder = torch.nn.Sequential(
+            torch.nn.Linear(latent_dim, 2000),
+            torch.nn.ReLU(),
+            torch.nn.Linear(2000, 500),
+            torch.nn.ReLU(),
+            torch.nn.Linear(500, 500),
+            torch.nn.ReLU(),
+            torch.nn.Linear(500, data_dim),
+            torch.nn.Sigmoid(),
+        )
+
+    def encode(self, x):
+        return self.encoder_mu(self.encoder(x))
+
+    def decode(self, z):
+        return self.decoder(z)
+
+    def forward(self, x):
+        z = self.encode(x)
+        recon_x = self.decode(z)
+        return recon_x

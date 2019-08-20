@@ -1,3 +1,4 @@
 torch >= 1.2
 torchvision
 munkres
+scikit-learn >= 0.18

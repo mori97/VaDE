@@ -62,6 +62,9 @@ def main():
     parser.add_argument('--batch-size', '-b',
                         help='Batch size.',
                         type=int, default=100)
+    parser.add_argument('--pretrain', '-p',
+                        help='Load parameters from pretrained model.',
+                        type=str, default=None)
     args = parser.parse_args()
 
     if_use_cuda = torch.cuda.is_available() and args.device
@@ -78,7 +81,10 @@ def main():
         test_dataset, batch_size=args.batch_size, shuffle=False,
         num_workers=2, pin_memory=if_use_cuda)
 
-    model = VaDE(10, 784, 10).to(device)
+    model = VaDE(10, 784, 10)
+    if args.pretrain:
+        model.load_state_dict(torch.load(args.pretrain))
+    model = model.to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
     # LR decreases every 10 epochs with a decay rate of 0.9
