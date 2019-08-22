@@ -70,15 +70,10 @@ def main():
     if_use_cuda = torch.cuda.is_available() and args.gpu >= 0
     device = torch.device('cuda:{}'.format(args.gpu) if if_use_cuda else 'cpu')
 
-    train_dataset = datasets.MNIST('./data', train=True, download=True,
+    dataset = datasets.MNIST('./data', train=True, download=True,
                                    transform=transforms.ToTensor())
-    test_dataset = datasets.MNIST('./data', train=False, download=True,
-                                  transform=transforms.ToTensor())
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=args.batch_size, shuffle=True,
-        num_workers=2, pin_memory=if_use_cuda)
-    test_loader = torch.utils.data.DataLoader(
-        test_dataset, batch_size=args.batch_size, shuffle=False,
+    data_loader = torch.utils.data.DataLoader(
+        dataset, batch_size=args.batch_size, shuffle=True,
         num_workers=2, pin_memory=if_use_cuda)
 
     model = VaDE(10, 784, 10)
@@ -95,8 +90,8 @@ def main():
     writer = SummaryWriter()
 
     for epoch in range(1, args.epochs + 1):
-        train(model, train_loader, optimizer, device, epoch, writer)
-        test(model, test_loader, device, epoch, writer)
+        train(model, data_loader, optimizer, device, epoch, writer)
+        test(model, data_loader, device, epoch, writer)
         lr_scheduler.step()
 
     writer.close()
