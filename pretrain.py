@@ -60,7 +60,7 @@ def main():
         dataset, batch_size=args.batch_size, shuffle=True,
         num_workers=2, pin_memory=if_use_cuda)
 
-    pretrain_model = AutoEncoderForPretrain(784, 16).to(device)
+    pretrain_model = AutoEncoderForPretrain(784, 10).to(device)
 
     optimizer = torch.optim.Adam(pretrain_model.parameters(),
                                  lr=args.learning_rate)
@@ -79,7 +79,7 @@ def main():
     gmm = GaussianMixture(n_components=10, covariance_type='diag')
     gmm.fit(z)
 
-    model = VaDE(N_CLASSES, 784, 16)
+    model = VaDE(N_CLASSES, 784, 10)
     model.load_state_dict(state_dict, strict=False)
     model._pi.data = torch.log(torch.from_numpy(gmm.weights_)).float()
     model.mu.data = torch.from_numpy(gmm.means_).float()
