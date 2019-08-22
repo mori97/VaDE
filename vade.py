@@ -33,24 +33,24 @@ class VaDE(torch.nn.Module):
         self.logvar = Parameter(torch.randn(n_classes, latent_dim))
 
         self.encoder = torch.nn.Sequential(
-            torch.nn.Linear(data_dim, 500),
+            torch.nn.Linear(data_dim, 512),
             torch.nn.ReLU(),
-            torch.nn.Linear(500, 500),
+            torch.nn.Linear(512, 512),
             torch.nn.ReLU(),
-            torch.nn.Linear(500, 2000),
+            torch.nn.Linear(512, 2048),
             torch.nn.ReLU(),
         )
-        self.encoder_mu = torch.nn.Linear(2000, latent_dim)
-        self.encoder_logvar = torch.nn.Linear(2000, latent_dim)
+        self.encoder_mu = torch.nn.Linear(2048, latent_dim)
+        self.encoder_logvar = torch.nn.Linear(2048, latent_dim)
 
         self.decoder = torch.nn.Sequential(
-            torch.nn.Linear(latent_dim, 2000),
+            torch.nn.Linear(latent_dim, 2048),
             torch.nn.ReLU(),
-            torch.nn.Linear(2000, 500),
+            torch.nn.Linear(2048, 512),
             torch.nn.ReLU(),
-            torch.nn.Linear(500, 500),
+            torch.nn.Linear(512, 512),
             torch.nn.ReLU(),
-            torch.nn.Linear(500, data_dim),
+            torch.nn.Linear(512, data_dim),
             torch.nn.Sigmoid(),
         )
 
@@ -126,23 +126,23 @@ class AutoEncoderForPretrain(torch.nn.Module):
         super(AutoEncoderForPretrain, self).__init__()
 
         self.encoder = torch.nn.Sequential(
-            torch.nn.Linear(data_dim, 500),
+            torch.nn.Linear(data_dim, 512),
             torch.nn.ReLU(),
-            torch.nn.Linear(500, 500),
+            torch.nn.Linear(512, 512),
             torch.nn.ReLU(),
-            torch.nn.Linear(500, 2000),
+            torch.nn.Linear(512, 2048),
             torch.nn.ReLU(),
         )
-        self.encoder_mu = torch.nn.Linear(2000, latent_dim)
+        self.encoder_mu = torch.nn.Linear(2048, latent_dim)
 
         self.decoder = torch.nn.Sequential(
-            torch.nn.Linear(latent_dim, 2000),
+            torch.nn.Linear(latent_dim, 2048),
             torch.nn.ReLU(),
-            torch.nn.Linear(2000, 500),
+            torch.nn.Linear(2048, 512),
             torch.nn.ReLU(),
-            torch.nn.Linear(500, 500),
+            torch.nn.Linear(512, 512),
             torch.nn.ReLU(),
-            torch.nn.Linear(500, data_dim),
+            torch.nn.Linear(512, data_dim),
             torch.nn.Sigmoid(),
         )
 

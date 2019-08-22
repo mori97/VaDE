@@ -76,7 +76,7 @@ def main():
         dataset, batch_size=args.batch_size, shuffle=True,
         num_workers=2, pin_memory=if_use_cuda)
 
-    model = VaDE(10, 784, 10)
+    model = VaDE(10, 784, 16)
     if args.pretrain:
         model.load_state_dict(torch.load(args.pretrain))
     model = model.to(device)
