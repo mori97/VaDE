@@ -69,8 +69,7 @@ def main():
         train(pretrain_model, data_loader, optimizer, device, epoch)
 
     with torch.no_grad():
-        x = torch.cat([dataset[i][0] for i in range(len(dataset))])
-        x = x.view(-1, 784).to(device)
+        x = torch.cat([data[0] for data in dataset]).view(-1, 784).to(device)
         z = pretrain_model.encode(x).cpu()
 
     pretrain_model = pretrain_model.cpu()
