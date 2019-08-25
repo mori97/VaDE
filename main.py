@@ -71,7 +71,7 @@ def main():
     device = torch.device('cuda:{}'.format(args.gpu) if if_use_cuda else 'cpu')
 
     dataset = datasets.MNIST('./data', train=True, download=True,
-                                   transform=transforms.ToTensor())
+                             transform=transforms.ToTensor())
     data_loader = torch.utils.data.DataLoader(
         dataset, batch_size=args.batch_size, shuffle=True,
         num_workers=2, pin_memory=if_use_cuda)
