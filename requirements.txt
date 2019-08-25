@@ -1,3 +1,4 @@
+matplotlib >= 3.0
 munkres
 scikit-learn >= 0.18
 tensorboard >= 1.14

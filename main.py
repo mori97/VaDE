@@ -1,6 +1,8 @@
 import argparse
 
+import matplotlib.pyplot as plt
 from munkres import Munkres
+from sklearn.manifold import TSNE
 import torch
 import torch.utils.data
 from torch.utils.tensorboard import SummaryWriter
@@ -9,6 +11,7 @@ from torchvision import datasets, transforms
 from vade import VaDE, lossfun
 
 N_CLASSES = 10
+PLOT_NUM_PER_CLASS = 128
 
 
 def train(model, data_loader, optimizer, device, epoch, writer):
@@ -28,7 +31,7 @@ def train(model, data_loader, optimizer, device, epoch, writer):
     writer.add_scalar('Loss/train', total_loss / len(data_loader), epoch)
 
 
-def test(model, data_loader, device, epoch, writer):
+def test(model, data_loader, device, epoch, writer, plot_points):
     model.eval()
 
     gain = torch.zeros((N_CLASSES, N_CLASSES), dtype=torch.int, device=device)
@@ -42,8 +45,21 @@ def test(model, data_loader, device, epoch, writer):
         assign = Munkres().compute(cost)
         acc = torch.sum(gain[tuple(zip(*assign))]).float() / torch.sum(gain)
 
-    writer.add_scalar('Acc/test', acc, epoch)
-    writer.flush()
+        # Plot latent space
+        xs, ts = plot_points[0].to(device), plot_points[1].numpy()
+        zs = model.encode(xs)[0].cpu().numpy()
+        tsne = TSNE(n_components=2, init='pca')
+        zs_tsne = tsne.fit_transform(zs)
+
+        fig, ax = plt.subplots()
+        cmap = plt.get_cmap("tab10")
+        for t in range(10):
+            points = zs_tsne[ts == t]
+            ax.scatter(points[:, 0], points[:, 1], color=cmap(t), label=str(t))
+        ax.legend()
+
+    writer.add_scalar('Acc/test', acc.item(), epoch)
+    writer.add_figure('LatentSpace', fig, epoch)
 
 
 def main():
@@ -76,6 +92,20 @@ def main():
         dataset, batch_size=args.batch_size, shuffle=True,
         num_workers=2, pin_memory=if_use_cuda)
 
+    # For plotting
+    plot_points = {}
+    for t in range(10):
+        points = torch.cat([data for data, label in dataset if label == t])
+        points = points.view(-1, 784)[:PLOT_NUM_PER_CLASS].to(device)
+        plot_points[t] = points
+    xs = []
+    ts = []
+    for t, x in plot_points.items():
+        xs.append(x)
+        t = torch.full((x.size(0),), t, dtype=torch.long)
+        ts.append(t)
+    plot_points = (torch.cat(xs, dim=0), torch.cat(ts, dim=0))
+
     model = VaDE(N_CLASSES, 784, 10)
     if args.pretrain:
         model.load_state_dict(torch.load(args.pretrain))
@@ -91,7 +121,7 @@ def main():
 
     for epoch in range(1, args.epochs + 1):
         train(model, data_loader, optimizer, device, epoch, writer)
-        test(model, data_loader, device, epoch, writer)
+        test(model, data_loader, device, epoch, writer, plot_points)
         lr_scheduler.step()
 
     writer.close()
